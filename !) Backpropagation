@@ -1,0 +1,85 @@
+import tensorflow as tf
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+from sklearn.linear_model import LogisticRegression
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import accuracy_score
+
+
+
+(x_train,y_train),(x_test,y_test)=tf.keras.datasets.mnist.load_data()
+
+x_train=x_train[:10000].reshape(-1,784)/255.0
+x_test=x_test[:2000].reshape(-1,784)/255.0
+y_train=y_train[:10000]
+y_test=y_test[:2000]
+
+
+
+model=tf.keras.Sequential([
+    tf.keras.layers.Input(shape=(784,)),
+    tf.keras.layers.Dense(128,activation='relu'),
+    tf.keras.layers.Dense(128,activation='relu'),
+    tf.keras.layers.Dense(128,activation='relu'),
+    tf.keras.layers.Dense(10,activation='softmax')
+])
+model.compile(optimizer=tf.keras.optimizers.Adam(0.001),
+              loss='sparse_categorical_crossentropy',
+              metrics=['accuracy'])
+
+
+
+start=time.time()
+history=model.fit(x_train,y_train,epochs=3,batch_size=128)
+mlp_time=time.time()-start
+
+loss,acc=model.evaluate(x_test,y_test)
+print("MLP Accuracy:",acc*100)
+print("Training Time:",mlp_time)
+
+
+
+start=time.time()
+lr=LogisticRegression(max_iter=100)
+lr.fit(x_train,y_train)
+lr_time=time.time()-start
+
+lr_acc=accuracy_score(y_test,lr.predict(x_test))
+print("Logistic Regression Accuracy:",lr_acc*100)
+print("Training Time:",lr_time)
+
+
+
+start=time.time()
+dt=DecisionTreeClassifier()
+dt.fit(x_train,y_train)
+dt_time=time.time()-start
+
+dt_acc=accuracy_score(y_test,dt.predict(x_test))
+print("Decision Tree Accuracy:",dt_acc*100)
+print("Training Time:",dt_time)
+
+
+
+print("MLP:",acc*100)
+print("Logistic Regression:",lr_acc*100)
+print("Decision Tree:",dt_acc*100)
+
+
+
+plt.plot(history.history['loss'])
+plt.title("MLP Loss Curve")
+plt.xlabel("Epochs")
+plt.ylabel("Loss")
+plt.show()
+
+
+
+plt.bar(['MLP','Logistic Regression','Decision Tree'],
+        [acc*100,lr_acc*100,dt_acc*100])
+plt.ylabel("Accuracy (%)")
+plt.show()
+
+
+
